@@ -21,38 +21,97 @@ public_users.post("/register", (req,res) => {
     return res.status(404).json({message: "Unable to register user."});
 });
 
-// Get the book list available in the shop
-public_users.get('/',function (req, res) {
+
+
+//
+//public_users.get('/',function (req, res) {
+//    var values = Object.keys(books).map(function(key){
+//        return books[key];
+//    });
+//    res.send(JSON.stringify(values,null,4));
+//});
+//
+
+
+let allBooksPromise = new Promise((resolve,reject) => {
     var values = Object.keys(books).map(function(key){
         return books[key];
     });
-    res.send(JSON.stringify(values,null,4));
-});
+    resolve(values)
+})
+
+let isbnPromise = (isbn) => new Promise((resolve,reject) => {
+    resolve(books[isbn])
+})
+
+let authorPromise = (searchedAuthor) => new Promise((resolve,reject) => {
+    var authorValues = Object.values(books).filter(function(values){
+        return values.author==searchedAuthor;
+    });
+    resolve(authorValues)
+})
+
+let titlePromise = (searchedTitle) => new Promise((resolve,reject) => {
+    var titleValues = Object.values(books).filter(function(values){
+        return values.title==searchedTitle;
+    });
+    resolve(titleValues)
+})
+
+
+
+// Get the book list available in the shop
+public_users.get('/', function (req, res) {
+    // Promise call
+    allBooksPromise.then(
+      (successMessage) => {
+        res.send(JSON.stringify(successMessage, null, 4));
+      },
+      (error) => {
+        res.status(500).send(null);
+      }
+    );
+  });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
-
     const isbn = req.params.isbn;
-    res.send(JSON.stringify(books[isbn],null,4));
-
+    isbnPromise(isbn).then(
+        (successMessage) => {
+            res.send(JSON.stringify(successMessage,null,4));
+        },
+        (error) => {
+          res.status(500).send(null);
+        }
+    );
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
     const searchedAuthor = req.params.author;
-    var authorValues = Object.values(books).filter(function(values){
-        return values.author==searchedAuthor;
-    });
-    res.send(JSON.stringify(authorValues,null,4));
+    // Promise call
+    authorPromise(searchedAuthor).then(
+        (successMessage) => {
+          res.send(JSON.stringify(successMessage, null, 4));
+        },
+        (error) => {
+          res.status(500).send(null);
+        }
+      );
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
     const searchedTitle = req.params.title;
-    var titleValues = Object.values(books).filter(function(values){
-        return values.title==searchedTitle;
-    })
-    res.send(JSON.stringify(titleValues,null,4))
+    // Promise call
+    titlePromise(searchedTitle).then(
+        (successMessage) => {
+          res.send(JSON.stringify(successMessage, null, 4));
+        },
+        (error) => {
+          res.status(500).send(null);
+        }
+      );
 });
 
 //  Get book review
